@@ -1,0 +1,336 @@
+openapi: 3.0.3
+
+info:
+  title: Open Trivia Database API
+  version: 1.0.0
+  description: Open Trivia Database API contract.
+
+servers:
+  - url: https://opentdb.com
+
+tags:
+  - name: OpenTriviaDB
+    description: Trivia question operations
+
+paths:
+  /api.php:
+    get:
+      tags:
+        - OpenTriviaDB
+      operationId: getQuestions
+      summary: Retrieve trivia questions
+
+      parameters:
+        - name: amount
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+
+        - name: category
+          in: query
+          schema:
+            type: integer
+
+        - name: difficulty
+          in: query
+          schema:
+            $ref: '#/components/schemas/Difficulty'
+
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/QuestionType'
+
+        - name: token
+          in: query
+          schema:
+            type: string
+
+        - name: encode
+          in: query
+          schema:
+            $ref: '#/components/schemas/Encoding'
+
+      responses:
+        '200':
+          description: Questions retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionResult'
+
+        '429':
+          description: Rate limit exceeded.
+
+  /api_token.php:
+    get:
+      tags:
+        - OpenTriviaDB
+      operationId: manageToken
+      summary: Request or reset a session token
+
+      parameters:
+        - name: command
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TokenCommand'
+
+        - name: token
+          in: query
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Token operation completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionToken'
+
+  /api_category.php:
+    get:
+      tags:
+        - OpenTriviaDB
+      operationId: getCategories
+
+      summary: Retrieve available categories
+
+      responses:
+        '200':
+          description: Categories retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryCatalog'
+
+  /api_count.php:
+    get:
+      tags:
+        - OpenTriviaDB
+      operationId: getCategoryCount
+
+      summary: Retrieve question counts for a category
+
+      parameters:
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        '200':
+          description: Category statistics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryCount'
+
+  /api_count_global.php:
+    get:
+      tags:
+        - OpenTriviaDB
+      operationId: getGlobalCount
+
+      summary: Retrieve global question counts
+
+      responses:
+        '200':
+          description: Global statistics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalCount'
+
+components:
+  schemas:
+
+    QuestionResult:
+      type: object
+      required:
+        - response_code
+        - results
+      properties:
+        response_code:
+          $ref: '#/components/schemas/ResponseCode'
+
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Question'
+
+    Question:
+      type: object
+      required:
+        - category
+        - type
+        - difficulty
+        - question
+        - correct_answer
+        - incorrect_answers
+      properties:
+        category:
+          type: string
+
+        type:
+          type: string
+
+        difficulty:
+          type: string
+
+        question:
+          type: string
+
+        correct_answer:
+          type: string
+
+        incorrect_answers:
+          type: array
+          items:
+            type: string
+
+    SessionToken:
+      type: object
+      required:
+        - response_code
+      properties:
+        response_code:
+          $ref: '#/components/schemas/ResponseCode'
+
+        response_message:
+          type: string
+
+        token:
+          type: string
+
+    CategoryCatalog:
+      type: object
+      required:
+        - trivia_categories
+      properties:
+        trivia_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    Category:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+
+        name:
+          type: string
+
+    CategoryCount:
+      type: object
+      required:
+        - category_id
+        - category_question_count
+      properties:
+        category_id:
+          type: integer
+
+        category_question_count:
+          $ref: '#/components/schemas/QuestionCount'
+
+    QuestionCount:
+      type: object
+      properties:
+        total_question_count:
+          type: integer
+
+        total_easy_question_count:
+          type: integer
+
+        total_medium_question_count:
+          type: integer
+
+        total_hard_question_count:
+          type: integer
+
+        total_multiple_choice_question_count:
+          type: integer
+          nullable: true
+
+        total_true_false_question_count:
+          type: integer
+          nullable: true
+
+    GlobalCount:
+      type: object
+      properties:
+        overall:
+          $ref: '#/components/schemas/OverallQuestionCount'
+
+    OverallQuestionCount:
+      type: object
+      properties:
+        total_num_of_questions:
+          type: integer
+
+        total_num_of_pending_questions:
+          type: integer
+
+        total_num_of_verified_questions:
+          type: integer
+
+        total_num_of_rejected_questions:
+          type: integer
+
+    ResponseCode:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+
+      x-enum-varnames:
+        - SUCCESS
+        - NO_RESULTS
+        - INVALID_PARAMETER
+        - TOKEN_NOT_FOUND
+        - TOKEN_EMPTY
+
+      x-enum-descriptions:
+        - Returned results successfully.
+        - The API does not have enough questions.
+        - An argument passed is not valid.
+        - The session token does not exist.
+        - The session token is exhausted.
+
+    Difficulty:
+      type: string
+      enum:
+        - easy
+        - medium
+        - hard
+
+    QuestionType:
+      type: string
+      enum:
+        - multiple
+        - boolean
+
+    Encoding:
+      type: string
+      enum:
+        - urlLegacy
+        - url3986
+        - base64
+
+    TokenCommand:
+      type: string
+      enum:
+        - request
+        - reset

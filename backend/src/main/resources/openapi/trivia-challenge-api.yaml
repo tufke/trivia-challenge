@@ -1,0 +1,218 @@
+openapi: 3.0.3
+
+info:
+  title: Trivia Challenge API
+  version: 1.0.0
+  description: Backend API for retrieving trivia questions and checking checkedAnswers.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: GetQuestions
+    description: Trivia question operations
+  - name: CheckAnswers
+    description: Check submitted checkedAnswers
+
+paths:
+  /questions:
+    get:
+      tags:
+        - GetQuestions
+
+      operationId: getQuestions
+      summary: Retrieve trivia questions
+
+      parameters:
+        - name: amount
+          in: query
+          required: false
+          description: Number of questions to retrieve.
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 50
+
+      responses:
+        '200':
+          description: Questions retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionsResponse'
+
+        default:
+          description: Error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+
+  /checkanswers:
+    post:
+      tags:
+        - CheckAnswers
+
+      operationId: checkAnswers
+      summary: Check submitted checkedAnswers
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmittedQuiz'
+
+      responses:
+        '200':
+          description: Answers checked successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResultResponse'
+
+        default:
+          description: Error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+
+components:
+  schemas:
+
+    QuestionsResponse:
+      type: object
+      required:
+        - questions
+
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Question'
+
+    Question:
+      type: object
+      required:
+        - id
+        - category
+        - difficulty
+        - question
+        - answers
+
+      properties:
+        id:
+          type: string
+          format: uuid
+
+        category:
+          type: string
+
+        difficulty:
+          $ref: '#/components/schemas/Difficulty'
+
+        question:
+          type: string
+
+        answers:
+          type: array
+          minItems: 2
+          items:
+            type: string
+
+    SubmittedQuiz:
+      type: object
+      required:
+        - answers
+
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmittedAnswer'
+
+    SubmittedAnswer:
+      type: object
+      required:
+        - questionId
+        - answer
+
+      properties:
+        questionId:
+          type: string
+          format: uuid
+
+        answer:
+          type: string
+
+    QuizResultResponse:
+      type: object
+      required:
+        - totalQuestions
+        - correctAnswers
+        - score
+        - answers
+
+      properties:
+        totalQuestions:
+          type: integer
+          minimum: 0
+
+        correctAnswers:
+          type: integer
+          minimum: 0
+
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckedAnswer'
+
+    CheckedAnswer:
+      type: object
+      required:
+        - questionId
+        - correct
+
+      properties:
+        questionId:
+          type: string
+          format: uuid
+
+        correct:
+          type: boolean
+
+    Difficulty:
+      type: string
+      enum:
+        - easy
+        - medium
+        - hard
+
+    ProblemDetail:
+      type: object
+
+      properties:
+        type:
+          type: string
+          format: uri
+
+        title:
+          type: string
+
+        status:
+          type: integer
+
+        detail:
+          type: string
+
+        instance:
+          type: string
+          format: uri

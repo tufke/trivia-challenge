@@ -1,0 +1,24 @@
+management:
+  info:
+    build:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: info,health
+  endpoint:
+    health:
+      show-details: always
+
+trivia-challenge:
+  triviadatabase:
+    base-url: https://opentdb.com
+    connect-timeout: 15s
+    read-timeout: 15s
+  database:
+    question-cache:
+      target-size: 5000
+      minimum-size: 1000
+      refresh-interval: PT6H
+    quiz-cache:
+      quiz-ttl: PT30M

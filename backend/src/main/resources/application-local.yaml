@@ -1,0 +1,7 @@
+
+trivia-challenge:
+  database:
+    question-cache:
+      target-size: 125
+      minimum-size: 40
+      refresh-interval: PT1M
